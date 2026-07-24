@@ -1,0 +1,61 @@
+services:
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - '9090:9090'
+    restart: always
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./docker/prometheus/target.jon:/etc/prometheus/targets.json
+      - prometheus_data:/prometheus
+    networks:
+      - monitor-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    networks:
+      - test-network
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: main_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+#  alertmanager:
+#    image: prom/alertmanager
+#    container_name: alertmanager
+#    ports:
+#      - '9093:9093'
+#    restart: always
+#    networks:
+#      - monitor-net
+#    command:
+#      - '--config.file=/etc/alertmanager/alertmanager.yml'
+#      - '--storage.path=/alertmanager'
+#    volumes:
+#      - ./docker/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+#      - alertmanager_data:/alertmanager
+
+networks:
+  monitor-net:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+#  alertmanager_data:
+  postgres_data:
+
+
+
+
+

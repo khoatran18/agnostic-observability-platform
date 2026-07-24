@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 5s
+  scrape_timeout: 2s
+  evaluation_interval: 10
+#alerting:
+#  alertmanagers:
+#  - static_configs:
+#    - targets: []
+#    scheme: http
+#    timeout: 10s
+#    api_version: v1
+scrape_configs:
+  - job_name: 'dynamic-metrics-craw'
+    honor_timestamps: true
+    scrape_interval: 5
+    scrape_timeout: 2
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets.json
