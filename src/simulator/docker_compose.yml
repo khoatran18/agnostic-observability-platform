@@ -4,6 +4,8 @@ services:
       context: ./client-node
       dockerfile: Dockerfile
     container_name: client_node_1
+    environment:
+      - CLIENT_NODE_ID=Client Node 1
     ports:
       - "8010:8000"
     restart: always
@@ -13,6 +15,19 @@ services:
       context: ./client-node
       dockerfile: Dockerfile
     container_name: client_node_2
+    environment:
+      - CLIENT_NODE_ID=Client Node 2
     ports:
       - "8011:8000"
+    restart: always
+
+  client-simulator-3:
+    build:
+      context: ./client-node
+      dockerfile: Dockerfile
+    container_name: client_node_3
+    environment:
+      - CLIENT_NODE_ID=Client Node 3
+    ports:
+      - "8012:8000"
     restart: always

@@ -25,9 +25,9 @@ _state = {
 }
 
 def set_cpu_scenario(scenario: CPUScenario) -> CPUScenario:
-    """Update CPU scenario and reset SPU start time"""
+    """Update CPU scenario and reset CPU start time"""
     _state["cpu_scenario"] = scenario
-    _state["spu_start_time"] = time.time()
+    _state["cpu_start_time"] = time.time()
     return _state["cpu_scenario"]
 
 def set_ram_scenario(scenario: RAMScenario) -> RAMScenario:

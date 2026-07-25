@@ -28,10 +28,18 @@ class RAMScenario(str, Enum):
 class CPUScenarioRequest(BaseModel):
     """Payload for CPU simulation request"""
     scenario: CPUScenario
+class CPUScenarioResponse(BaseModel):
+    """Response for CPU simulation request"""
+    status: str
+    scenario: str
 
 class RAMScenarioRequest(BaseModel):
     """Payload for RAM simulation request"""
     scenario: RAMScenario
+class RAMScenarioResponse(BaseModel):
+    """Response for RAM simulation request"""
+    status: str
+    scenario: str
 
 class SystemConfigRequest(BaseModel):
     """Payload for system configuration request"""
@@ -49,7 +57,15 @@ class SystemConfigRequest(BaseModel):
     # Time window limits (seconds)
     duration_safe_seconds: float | None = None
     duration_danger_seconds: float | None = None
+class SystemConfigResponse(BaseModel):
+    """Response for system configuration request"""
+    status: str
+    config: dict
 
+class StatusResponse(BaseModel):
+    """Response for system status request"""
+    status: str
+    state: dict
 
 
 

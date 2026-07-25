@@ -1,0 +1,17 @@
+{
+  "defaultEndpoints": [
+    "http://localhost:8010",
+    "http://localhost:8011",
+    "http://localhost:8012"
+  ],
+  "presetClusters": [
+    {
+      "name": "Local Cluster",
+      "endpoints": [
+        "http://localhost:8010",
+        "http://localhost:8011",
+        "http://localhost:8012"
+      ]
+    }
+  ]
+}
