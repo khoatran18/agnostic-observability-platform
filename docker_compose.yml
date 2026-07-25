@@ -11,8 +11,9 @@ services:
     restart: always
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./docker/prometheus/target.jon:/etc/prometheus/targets.json
+      - ./docker/prometheus/targets.json:/etc/prometheus/targets.json:ro
       - prometheus_data:/prometheus
+      - prom_shared_data:/etc/prometheus    # share with core-backend container
     networks:
       - monitor-net
 
@@ -21,7 +22,7 @@ services:
     container_name: postgres
     restart: unless-stopped
     networks:
-      - test-network
+      - monitor-net
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
@@ -54,6 +55,7 @@ volumes:
   prometheus_data:
 #  alertmanager_data:
   postgres_data:
+  prom_shared_data:
 
 
 
