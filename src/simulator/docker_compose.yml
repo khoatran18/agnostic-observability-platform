@@ -1,0 +1,18 @@
+services:
+  client-simulator-1:
+    build:
+      context: ./client-node
+      dockerfile: Dockerfile
+    container_name: client_node_1
+    ports:
+      - "8010:8000"
+    restart: always
+
+  client-simulator-2:
+    build:
+      context: ./client-node
+      dockerfile: Dockerfile
+    container_name: client_node_2
+    ports:
+      - "8011:8000"
+    restart: always
