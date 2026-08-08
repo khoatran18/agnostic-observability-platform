@@ -62,6 +62,22 @@ export function TargetsConfig() {
     }
   };
 
+  const resetToDefaults = async () => {
+    if (!window.confirm(`Reset to ${DEFAULT_TARGETS.length} default endpoints? This will overwrite current targets.`)) return;
+    setSaving(true);
+    setMsg(null);
+    try {
+      await updateTargets(DEFAULT_TARGETS);
+      setTargets(DEFAULT_TARGETS);
+      setUsingDefaults(false);
+      setMsg({ type: 'success', text: `✓ Reset to ${DEFAULT_TARGETS.length} default targets.` });
+    } catch (e) {
+      setMsg({ type: 'error', text: (e as Error).message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="card config-section">
       <div className="config-section-header">
@@ -74,11 +90,23 @@ export function TargetsConfig() {
             </p>
           </div>
         </div>
-        <button className="btn btn-primary" onClick={save} disabled={saving} id="btn-save-targets">
-          {saving
-            ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Saving…</>
-            : '💾 Save Targets'}
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={resetToDefaults}
+            disabled={saving}
+            id="btn-reset-targets"
+            title={`Reset to default: ${DEFAULT_TARGETS.join(', ')}`}
+            style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}
+          >
+            ↺ Reset to Defaults
+          </button>
+          <button className="btn btn-primary" onClick={save} disabled={saving} id="btn-save-targets">
+            {saving
+              ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Saving…</>
+              : '💾 Save Targets'}
+          </button>
+        </div>
       </div>
 
       {usingDefaults && (

@@ -6,9 +6,7 @@ interface ClusterOverviewProps {
 }
 
 export function ClusterOverview({ nodes, loading }: ClusterOverviewProps) {
-  const total = nodes.length;
-  const online = nodes.filter(n => n.is_online).length;
-  const offline = total - online;
+  const total        = nodes.length;
   const alertCount   = nodes.filter(n => n.overall_status === 'alert').length;
   const warningCount = nodes.filter(n => n.overall_status === 'warning').length;
 
@@ -20,13 +18,11 @@ export function ClusterOverview({ nodes, loading }: ClusterOverviewProps) {
   );
 
   const cards = [
-    { label: 'Total Nodes', value: total, cls: 'accent', sub: 'monitored' },
-    { label: 'Online',  value: online,  cls: 'green',  sub: 'nodes active' },
-    { label: 'Offline', value: offline, cls: 'gray',   sub: 'nodes down' },
-    { label: 'Avg CPU', value: `${avgCpu}%`, cls: avgCpu >= 75 ? 'red' : avgCpu >= 55 ? 'yellow' : 'green', sub: 'cluster average' },
-    { label: 'Avg RAM', value: `${avgRam}%`, cls: avgRam >= 75 ? 'red' : avgRam >= 55 ? 'yellow' : 'green', sub: 'cluster average' },
-    { label: 'Warning', value: warningCount, cls: 'yellow', sub: 'nodes at risk' },
-    { label: 'Alert',   value: alertCount,   cls: 'red',    sub: 'nodes critical' },
+    { label: 'Total Nodes', value: total,        cls: 'accent',                                                           sub: 'monitored' },
+    { label: 'Avg CPU',     value: `${avgCpu}%`, cls: avgCpu >= 75 ? 'red' : avgCpu >= 55 ? 'yellow' : 'green',          sub: 'cluster average' },
+    { label: 'Avg RAM',     value: `${avgRam}%`, cls: avgRam >= 75 ? 'red' : avgRam >= 55 ? 'yellow' : 'green',          sub: 'cluster average' },
+    { label: 'Warning',     value: warningCount, cls: warningCount > 0 ? 'yellow' : 'gray',                               sub: 'nodes at risk' },
+    { label: 'Alert',       value: alertCount,   cls: alertCount   > 0 ? 'red'    : 'gray',                               sub: 'nodes critical' },
   ];
 
   return (

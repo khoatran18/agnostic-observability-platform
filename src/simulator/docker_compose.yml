@@ -38,6 +38,17 @@ services:
     networks:
       - agnostic-observability-platform_monitor-net
 
+  client-control-plane:
+    build:
+      context: ./client-control-plane
+      dockerfile: Dockerfile
+    container_name: client_control_plane
+    ports:
+      - "3000:80"
+    restart: always
+    networks:
+      - agnostic-observability-platform_monitor-net
+
 networks:
   agnostic-observability-platform_monitor-net:
     external: true

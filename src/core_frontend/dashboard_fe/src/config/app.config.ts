@@ -19,6 +19,7 @@ export const API_CONFIG = APP_CONFIG;
 
 // ── API endpoints (không cần chỉnh) ────────────────────────────────────────
 export const API_ENDPOINTS = {
+  NODE_STATUS:           '/api/dashboard/node-status',
   NODES_REALTIME_STATUS: '/api/dashboard/nodes-realtime-status',
   ALERT_HISTORY:         '/api/dashboard/alert-history',
   METRICS_HISTORY:       '/api/dashboard/metrics-history',

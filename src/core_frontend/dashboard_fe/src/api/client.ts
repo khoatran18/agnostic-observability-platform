@@ -29,6 +29,13 @@ export async function fetchNodesRealtimeStatus(): Promise<NodeStatus[]> {
   return data.data ?? [];
 }
 
+export async function fetchNodeStatus(node_id: string): Promise<NodeStatus[]> {
+  const data = await apiFetch<{ status: string; data: NodeStatus[] }>(
+    buildUrl(API_ENDPOINTS.NODE_STATUS, { node_id }),
+  );
+  return data.data ?? [];
+}
+
 export async function fetchAlertHistory(limit = 50): Promise<AlertHistoryItem[]> {
   const data = await apiFetch<{ status: string; data: AlertHistoryItem[] }>(
     buildUrl(API_ENDPOINTS.ALERT_HISTORY, { limit }),

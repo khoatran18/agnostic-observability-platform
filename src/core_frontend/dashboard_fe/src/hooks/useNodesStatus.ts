@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { fetchNodesRealtimeStatus } from '../api/client';
+import { fetchNodeStatus, fetchTargets } from '../api/client';
 import { API_CONFIG } from '../config/api.config';
 import type { NodeStatus, NodeSummary, StatusLevel } from '../types';
 
@@ -30,6 +30,9 @@ function aggregateNodes(rows: NodeStatus[]): NodeSummary[] {
 }
 
 /**
+ * Fetches the list of monitored nodes from /targets, then queries
+ * /node-status for each node in parallel to build real-time NodeSummary[].
+ *
  * @param intervalMs - polling interval in ms; pass 0 to disable auto-refresh
  */
 export function useNodesStatus(intervalMs: number = API_CONFIG.NODES_POLL_INTERVAL_MS) {
@@ -41,9 +44,31 @@ export function useNodesStatus(intervalMs: number = API_CONFIG.NODES_POLL_INTERV
 
   const doFetch = useCallback(async () => {
     try {
-      const data = await fetchNodesRealtimeStatus();
-      setRawRows(data);
-      setNodes(aggregateNodes(data));
+      // 1. Get the list of node IDs from /targets
+      const targets = await fetchTargets();
+
+      if (targets.length === 0) {
+        setRawRows([]);
+        setNodes([]);
+        setError(null);
+        return;
+      }
+
+      // 2. Fetch status for each node in parallel
+      const results = await Promise.allSettled(
+        targets.map((nodeId) => fetchNodeStatus(nodeId)),
+      );
+
+      // 3. Flatten all fulfilled results into a single NodeStatus[]
+      const allRows: NodeStatus[] = [];
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          allRows.push(...result.value);
+        }
+      }
+
+      setRawRows(allRows);
+      setNodes(aggregateNodes(allRows));
       setError(null);
     } catch (e) {
       setError((e as Error).message);

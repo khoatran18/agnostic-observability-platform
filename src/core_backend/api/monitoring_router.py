@@ -37,6 +37,43 @@ def get_nodes_realtime_status(service: ConfigManagementService = Depends(get_con
         return {"status": "error", "message": str(e)}
 
 
+@router.get("/node-status")
+def get_node_status(
+        node_id: str = Query(..., description="Node instance ID, e.g., client_node_1:8000"),
+        service: ConfigManagementService = Depends(get_config_service)
+):
+    """
+    Fetch the latest status of a specific node from the database (filtered by node_id).
+    If the node has no history in the DB yet, returns placeholder 'recovered' rows
+    so the frontend always renders the node card.
+    """
+    try:
+        query = """
+                SELECT node_id, resource_type, status_level, last_value, scenario, updated_at
+                FROM node_current_status
+                WHERE node_id = :node_id
+                ORDER BY updated_at DESC; \
+                """
+        results = service.db_client.execute_query(query, {"node_id": node_id})
+
+        # If no DB rows yet, return placeholder rows so FE still shows the node card
+        if not results:
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc).isoformat()
+            results = [
+                {"node_id": node_id, "resource_type": "cpu", "status_level": "recovered",
+                 "last_value": 0.0, "scenario": "No data yet", "updated_at": now},
+                {"node_id": node_id, "resource_type": "ram", "status_level": "recovered",
+                 "last_value": 0.0, "scenario": "No data yet", "updated_at": now},
+            ]
+
+        return {"status": "success", "data": results}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+
+
 @router.get("/alert-history")
 def get_alert_history(
         limit: int = Query(50, description="Max number of historical logs to return"),
