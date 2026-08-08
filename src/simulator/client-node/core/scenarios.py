@@ -19,8 +19,8 @@ _state = {
         "mad_k": 3.0,
         "threshold_1": 0.7,
         "threshold_2": 0.9,
-        "duration_safe_seconds": 12.0,
-        "duration_danger_seconds": 32.0,
+        "duration_safe_seconds": 10.0,
+        "duration_danger_seconds": 30.0,
     }
 }
 
@@ -92,7 +92,11 @@ def _calculate_cpu_metric(cfg: dict) -> float:
         cpu_val = random.uniform(c_min, c_max)
 
     elif cpu_scen == CPUScenario.SPIKE_MAD_SAFE:
-        cpu_val = random.uniform(mad_th + 0.01, th1 - 0.01)
+        if cpu_elapsed < safe_sec:
+            cpu_val = random.uniform(mad_th + 0.01, th1 - 0.01)
+        else:
+            _state["cpu_scenario"] = CPUScenario.NORMAL
+            cpu_val = random.uniform(c_min, c_max)
 
     elif cpu_scen == CPUScenario.SPIKE_TH1_SAFE:
         if cpu_elapsed < safe_sec:
@@ -141,7 +145,11 @@ def _calculate_ram_metric(cfg: dict) -> float:
         ram_val = random.uniform(r_min, r_max)
 
     elif ram_scen == RAMScenario.SPIKE_MAD_SAFE:
-        ram_val = random.uniform(r_max + 0.2, ram_th1 - 0.1)
+        if ram_elapsed < safe_sec:
+            ram_val = random.uniform(r_max + 0.2, ram_th1 - 0.1)
+        else:
+            _state["ram_scenario"] = RAMScenario.NORMAL
+            ram_val = random.uniform(r_min, r_max)
 
     elif ram_scen == RAMScenario.SPIKE_TH1_SAFE:
         if ram_elapsed < safe_sec:
@@ -171,16 +179,21 @@ def _calculate_ram_metric(cfg: dict) -> float:
 
     return ram_val * 1024 * 1024 * 1024
 
-def calculate_metrics() -> tuple[float, float]:
+def calculate_metrics() -> tuple[float, float, float]:
     """
-    Evaluate the current system state and return CPU and RAM metrics
+    Evaluate the current system state and return CPU, RAM bytes, and RAM ratio.
     Returns:
-        tuple: (cpu_usage_ratio, ram_usage_ratio)
+        tuple: (cpu_usage_ratio, ram_usage_bytes, ram_usage_ratio)
     """
     cfg = _state["config"]
     cpu_val = _calculate_cpu_metric(cfg)
     ram_bytes = _calculate_ram_metric(cfg)
-    return cpu_val, ram_bytes
+
+    # Tính toán tỷ lệ ratio (0.0 - 1.0) để phục vụ cho Anomaly Engine so sánh ngưỡng
+    total_ram_bytes = cfg["total_ram_gb"] * 1024 * 1024 * 1024
+    ram_ratio = ram_bytes / total_ram_bytes if total_ram_bytes > 0 else 0.0
+
+    return cpu_val, ram_bytes, ram_ratio
 
 
 

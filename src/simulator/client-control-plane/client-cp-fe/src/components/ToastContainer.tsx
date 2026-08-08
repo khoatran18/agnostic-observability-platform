@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, AlertTriangle, Info, X } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, AlertCircle, Info, X } from 'lucide-react';
 import type { ToastMessage } from '../types';
 
 interface ToastContainerProps {
@@ -16,7 +16,8 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismis
         <div key={t.id} className={`floating-toast ${t.type}`}>
           <div className="toast-icon">
             {t.type === 'success' && <CheckCircle2 size={20} />}
-            {t.type === 'error' && <AlertTriangle size={20} />}
+            {t.type === 'error' && <AlertCircle size={20} />}
+            {t.type === 'warning' && <AlertTriangle size={20} />}
             {t.type === 'info' && <Info size={20} />}
           </div>
 

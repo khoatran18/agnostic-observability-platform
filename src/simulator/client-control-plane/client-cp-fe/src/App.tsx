@@ -61,7 +61,7 @@ export default function App() {
   }, []);
 
   // Toast notifier helper
-  const addToast = useCallback((type: 'success' | 'error' | 'info', title: string, message: string) => {
+  const addToast = useCallback((type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => {
     const id = Date.now().toString() + Math.random().toString(36).slice(2, 6);
     const newToast: ToastMessage = { id, type, title, message };
 
@@ -127,14 +127,12 @@ export default function App() {
   };
 
   const handleAddPresetCluster = (clusterEndpoints: string[]) => {
-    let addedCount = 0;
     setEndpoints((prev) => {
       const copy = [...prev];
       clusterEndpoints.forEach((raw) => {
         const norm = normalizeEndpoint(raw);
         if (!copy.includes(norm)) {
           copy.push(norm);
-          addedCount++;
         }
       });
       return sortEndpoints(copy);
@@ -167,11 +165,26 @@ export default function App() {
       })
     );
     setIsRefreshingAll(false);
-    addToast(
-      'success',
-      'Bulk Injection Complete',
-      `Applied scenario (${cpuScenario}) to ${successCount}/${endpoints.length} active nodes.`
-    );
+
+    if (successCount === 0) {
+      addToast(
+        'error',
+        'Bulk Injection Failed',
+        `Failed to apply scenario (${cpuScenario}) to any nodes (0/${endpoints.length} active nodes).`
+      );
+    } else if (successCount < endpoints.length) {
+      addToast(
+        'warning',
+        'Bulk Injection Partial',
+        `Applied scenario (${cpuScenario}) to ${successCount}/${endpoints.length} active nodes.`
+      );
+    } else {
+      addToast(
+        'success',
+        'Bulk Injection Complete',
+        `Applied scenario (${cpuScenario}) to all ${successCount}/${endpoints.length} active nodes.`
+      );
+    }
   };
 
   const onlineCount = Object.values(nodesMap).filter((n) => n.isOnline).length;

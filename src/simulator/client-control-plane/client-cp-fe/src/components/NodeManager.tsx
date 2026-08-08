@@ -37,6 +37,11 @@ export const NodeManager: React.FC<NodeManagerProps> = ({
     setNewEndpoint('');
   };
 
+  const onlineStatusClass =
+    onlineCount === 0 ? 'danger' : onlineCount < nodeCount ? 'warning' : 'success';
+  const pulseDotClass =
+    onlineCount === 0 ? 'red' : onlineCount < nodeCount ? 'yellow' : 'green';
+
   return (
     <div className="control-manager-panel">
       <div className="manager-header">
@@ -54,8 +59,8 @@ export const NodeManager: React.FC<NodeManagerProps> = ({
             <Server size={16} />
             <span>Total Nodes: <strong>{nodeCount}</strong></span>
           </div>
-          <div className="stat-badge success">
-            <span className="pulse-dot green"></span>
+          <div className={`stat-badge ${onlineStatusClass}`}>
+            <span className={`pulse-dot ${pulseDotClass}`}></span>
             <span>Online: <strong>{onlineCount}/{nodeCount}</strong></span>
           </div>
           <button 

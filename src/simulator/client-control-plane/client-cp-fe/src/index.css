@@ -133,6 +133,14 @@ body {
   color: var(--status-danger);
 }
 
+.floating-toast.warning {
+  border-left: 4px solid var(--status-safe);
+}
+
+.floating-toast.warning .toast-icon {
+  color: var(--status-safe);
+}
+
 .floating-toast.info {
   border-left: 4px solid var(--accent-cyan);
 }
@@ -266,8 +274,20 @@ body {
   color: var(--text-muted);
 }
 
-.stat-badge strong {
-  color: var(--text-main);
+.stat-badge.success {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.stat-badge.warning {
+  background: var(--status-safe-bg);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: var(--status-safe);
+}
+
+.stat-badge.danger {
+  background: var(--status-danger-bg);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--status-danger);
 }
 
 .pulse-dot {
@@ -279,6 +299,16 @@ body {
 .pulse-dot.green {
   background: var(--status-normal);
   box-shadow: 0 0 8px var(--status-normal);
+}
+
+.pulse-dot.yellow {
+  background: var(--status-safe);
+  box-shadow: 0 0 8px var(--status-safe);
+}
+
+.pulse-dot.red {
+  background: var(--status-danger);
+  box-shadow: 0 0 8px var(--status-danger);
 }
 
 /* Manager Actions Row */

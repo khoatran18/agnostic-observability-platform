@@ -9,6 +9,8 @@ services:
     ports:
       - "8010:8000"
     restart: always
+    networks:
+      - agnostic-observability-platform_monitor-net
 
   client-simulator-2:
     build:
@@ -20,6 +22,8 @@ services:
     ports:
       - "8011:8000"
     restart: always
+    networks:
+      - agnostic-observability-platform_monitor-net
 
   client-simulator-3:
     build:
@@ -31,3 +35,13 @@ services:
     ports:
       - "8012:8000"
     restart: always
+    networks:
+      - agnostic-observability-platform_monitor-net
+
+networks:
+  agnostic-observability-platform_monitor-net:
+    external: true
+
+# docker compose -f docker_compose.yml up -d --build
+
+

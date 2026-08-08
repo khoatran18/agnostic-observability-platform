@@ -6,6 +6,7 @@ app:
 infrastructure:
   prometheus:
     timeout: 5
+    url: "http://localhost:9090"
   postgres:
     host: "postgres"
     port: 5432
