@@ -5,7 +5,9 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Dict, Any
 from .base import BaseNotificationChannel
+from src.config.logging import setup_logging
 
+setup_logging()
 logger = logging.getLogger(__name__)
 
 

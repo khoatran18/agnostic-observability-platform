@@ -2,7 +2,10 @@ import logging
 from typing import Optional
 from .base import BaseNotificationChannel
 from .channels import TelegramChannel, WebhookChannel, GmailChannel
+from src.config.logging import setup_logging
 
+
+setup_logging()
 logger = logging.getLogger(__name__)
 
 class NotificationFactory:

@@ -1,9 +1,11 @@
 import logging
 from typing import Dict, Any
 
+from src.config.logging import setup_logging
 from src.core_backend.alert_notification.alert_history import AlertHistoryService
 from src.core_backend.alert_notification.factory import NotificationFactory
 
+setup_logging()
 logger = logging.getLogger(__name__)
 
 

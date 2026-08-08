@@ -16,6 +16,7 @@ services:
       - postgres
       - prometheus
     volumes:
+      - ./docker/prometheus/targets.json:/app/docker/prometheus/targets.json
       - prom_shared_data:/etc/prometheus
     networks:
       - monitor-net

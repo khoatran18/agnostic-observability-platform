@@ -1,9 +1,15 @@
+import logging
 import time
 from fastapi import APIRouter, Depends, Query
+
+from src.config.logging import setup_logging
 from src.config.settings import load_config
 from src.core_backend.config_management.service import ConfigManagementService
 from src.shared.postgres.postgres_client import PostgresClient
 from src.shared.prometheus.prometheus_client import PrometheusClient
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard Monitoring"])
 
@@ -64,13 +70,9 @@ def get_metrics_history(
     try:
         config = load_config()
 
-        # Lấy URL của Prometheus từ cấu hình YAML (infrastructure.prometheus.url)
-        infra_config = getattr(config, "infrastructure", {})
-        if isinstance(infra_config, dict):
-            prom_url = infra_config.get("prometheus", {}).get("url", "http://localhost:9090")
-        else:
-            prom_url = getattr(getattr(config, "prometheus", None), "url", "http://localhost:9090")
+        prom_url = config.get("infrastructure", {}).get("prometheus", {}).get("url", "http://localhost:9090")
 
+        logger.info(f"Prometheus URL: {prom_url}")
         prom_client = PrometheusClient(prom_url)
 
         end_time = time.time()
@@ -92,6 +94,7 @@ def get_metrics_history(
                     "value": float(val) * (100.0 if metric_type.lower() == "cpu" else 1.0)
                 })
 
+        logger.info(f"Fetched {len(chart_data)} datapoints for {metric_type} metric on {node_id}")
         return {
             "status": "success",
             "node_id": node_id,

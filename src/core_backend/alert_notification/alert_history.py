@@ -1,6 +1,9 @@
 import logging
 from typing import Dict, Any
 
+from src.config.logging import setup_logging
+
+setup_logging()
 logger = logging.getLogger(__name__)
 
 class AlertHistoryService:
@@ -10,6 +13,25 @@ class AlertHistoryService:
 
     def __init__(self, db_client):
         self.db_client = db_client
+
+    def ensure_node_exists(self, node_id: str, resource_type: str):
+        """
+        Check if a node and resource already exist in node_current_status.
+        If not, initialize it with a default 'recovered' (normal/green) state.
+        """
+        try:
+            query = """
+                    INSERT INTO node_current_status (node_id, resource_type, status_level, last_value, scenario, \
+                                                     updated_at)
+                    VALUES (:node_id, :resource_type, 'recovered', 0.0, 'normal', \
+                            CURRENT_TIMESTAMP) ON CONFLICT (node_id, resource_type) DO NOTHING; \
+                    """
+            self.db_client.execute_non_query(query, {
+                "node_id": node_id,
+                "resource_type": resource_type
+            })
+        except Exception as e:
+            logger.error(f"[AlertHistoryService] Failed to ensure node existence for [{node_id}:{resource_type}]: {e}")
 
     def record_alert_event(self, node_id: str, resource_type: str, value: float, scenario: str, alert_level: str):
         """
@@ -51,3 +73,30 @@ class AlertHistoryService:
             logger.debug(f"[AlertHistoryService] Successfully recorded status [{alert_level}] for [{node_id}:{resource_type}]")
         except Exception as e:
             logger.error(f"[AlertHistoryService] Failed to record alert event to database: {e}")
+
+    def upsert_node_status(self, node_id: str, resource_type: str, status_level: str, last_value: float, scenario: str):
+        """
+        Upsert the latest status of a node and resource into database every scrape cycle (every 10s),
+        ensuring real-time metrics and normal states are always up-to-date.
+        """
+        try:
+            query = """
+                    INSERT INTO node_current_status (node_id, resource_type, status_level, last_value, scenario, \
+                                                     updated_at)
+                    VALUES (:node_id, :resource_type, :status_level, :last_value, :scenario, CURRENT_TIMESTAMP) ON CONFLICT (node_id, resource_type) 
+                DO \
+                    UPDATE SET
+                        status_level = EXCLUDED.status_level, \
+                        last_value = EXCLUDED.last_value, \
+                        scenario = EXCLUDED.scenario, \
+                        updated_at = CURRENT_TIMESTAMP; \
+                    """
+            self.db_client.execute_non_query(query, {
+                "node_id": node_id,
+                "resource_type": resource_type,
+                "status_level": status_level,
+                "last_value": last_value,
+                "scenario": scenario
+            })
+        except Exception as e:
+            logger.error(f"[AlertHistoryService] Failed to upsert node status for [{node_id}:{resource_type}]: {e}")

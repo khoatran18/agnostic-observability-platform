@@ -16,6 +16,7 @@ class PostgresClient:
         postgres_cfg = config.get("infrastructure", {}).get("postgres", {})
 
         self.connection_string = f"postgresql://{postgres_cfg['user']}:{postgres_cfg['password']}@{postgres_cfg['host']}:{postgres_cfg['port']}/{postgres_cfg['database']}"
+        logger.info(f"Connecting to Postgres at {self.connection_string}")
         self.engine = None
         self._is_initialized = False
 

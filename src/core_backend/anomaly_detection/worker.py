@@ -74,14 +74,26 @@ class AnomalyWorker:
             except (IndexError, ValueError):
                 continue
 
+            self.alert_dispatcher.alert_history.ensure_node_exists(node_id, "cpu")
             scenario, notification_type, is_danger = self.engine.evaluate_cpu(node_id, value, current_time,
                                                                               strategy_params)
-
-            if notification_type == "warning":
+            if notification_type is None or notification_type == "normal":
+                self.alert_dispatcher.alert_history.upsert_node_status(
+                    node_id=node_id,
+                    resource_type="cpu",
+                    status_level="recovered",
+                    last_value=value,
+                    scenario=scenario.value
+                )
+            elif notification_type == "warning":
+                logger.warning(f"[CPU WARNING] Threshold crossed on Node {node_id}. Dispatching warning...")
                 self.alert_dispatcher.dispatch(node_id, "cpu", value, scenario.value, alert_level="warning")
             elif notification_type == "alert":
+                logger.warning(
+                    f"[CPU ALERT] Critical threshold violation confirmed on Node {node_id}. Dispatching alert...")
                 self.alert_dispatcher.dispatch(node_id, "cpu", value, scenario.value, alert_level="alert")
             elif notification_type == "recovered":
+                logger.info(f"[CPU RECOVERED] System back to normal on Node {node_id}.")
                 self.alert_dispatcher.dispatch(node_id, "cpu", value, scenario.value, alert_level="recovered")
 
         # 2. Evaluate RAM Metrics
@@ -92,14 +104,26 @@ class AnomalyWorker:
             except (IndexError, ValueError):
                 continue
 
+            self.alert_dispatcher.alert_history.ensure_node_exists(node_id, "ram")
             scenario, notification_type, is_danger = self.engine.evaluate_ram(node_id, value, current_time,
                                                                               strategy_params)
 
-            if notification_type == "warning":
+            if notification_type is None or notification_type == "normal":
+                self.alert_dispatcher.alert_history.upsert_node_status(
+                    node_id=node_id,
+                    resource_type="ram",
+                    status_level="recovered",
+                    last_value=value,
+                    scenario=scenario.value
+                )
+            elif notification_type == "warning":
+                logger.warning(f"[RAM WARNING] Threshold crossed on Node {node_id}. Dispatching warning...")
                 self.alert_dispatcher.dispatch(node_id, "ram", value, scenario.value, alert_level="warning")
             elif notification_type == "alert":
+                logger.warning(f"[RAM ALERT] Critical threshold violation confirmed on Node {node_id}. Dispatching alert...")
                 self.alert_dispatcher.dispatch(node_id, "ram", value, scenario.value, alert_level="alert")
             elif notification_type == "recovered":
+                logger.info(f"[RAM RECOVERED] System back to normal on Node {node_id}.")
                 self.alert_dispatcher.dispatch(node_id, "ram", value, scenario.value, alert_level="recovered")
 
     def run(self):
