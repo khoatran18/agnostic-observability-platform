@@ -1,5 +1,38 @@
 services:
 
+  core-backend:
+    build:
+      context: .
+      dockerfile: src/core_backend/Dockerfile
+    container_name: core-backend
+    ports:
+      - '8000:8000'
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=prod
+    depends_on:
+      - postgres
+      - prometheus
+    volumes:
+      - prom_shared_data:/etc/prometheus
+    networks:
+      - monitor-net
+
+  core-frontend:
+    build:
+      context: .
+      dockerfile: src/core_frontend/Dockerfile
+    container_name: core-frontend
+    ports:
+      - '80:80'
+    restart: unless-stopped
+    depends_on:
+      - core-backend
+    networks:
+      - monitor-net
+
   prometheus:
     image: prom/prometheus
     container_name: prometheus
@@ -25,27 +58,12 @@ services:
       - monitor-net
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
       POSTGRES_DB: main_db
     ports:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-#  alertmanager:
-#    image: prom/alertmanager
-#    container_name: alertmanager
-#    ports:
-#      - '9093:9093'
-#    restart: always
-#    networks:
-#      - monitor-net
-#    command:
-#      - '--config.file=/etc/alertmanager/alertmanager.yml'
-#      - '--storage.path=/alertmanager'
-#    volumes:
-#      - ./docker/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
-#      - alertmanager_data:/alertmanager
 
 networks:
   monitor-net:
@@ -53,11 +71,8 @@ networks:
 
 volumes:
   prometheus_data:
-#  alertmanager_data:
   postgres_data:
   prom_shared_data:
 
-
-
-
+# docker compose -f docker_compose.yml up -d --build
 

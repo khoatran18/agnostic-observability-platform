@@ -2,7 +2,6 @@ import logging
 import os
 from pathlib import Path
 
-from numba.core.ir import Raise
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 

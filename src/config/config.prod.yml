@@ -1,0 +1,34 @@
+app:
+  name: "Agnostic Observability Platform"
+  env: "prod"         # dev, prod
+  version: "1.0.0"
+
+infrastructure:
+  prometheus:
+    timeout: 5
+    url: "http://prometheus:9090"
+  postgres:
+    host: "postgres"
+    port: 5432
+    user: "admin"
+    password: ${POSTGRES_PASSWORD}
+    database: "main_db"
+    uri: jdbc:postgresql://postgres:5432/main_db
+
+core-backend:
+  anomaly-detection:
+    enabled: true
+    scrape_interval: 10   # seconds, interval between two consecutive scrapes
+    scrape_timeout: 5     # seconds, max wait for a scrape to complete
+    history_window: 1     # minutes, time window to fetch historical metrics
+    strategies:
+      - static_threshold:
+          enabled: true
+          cpu_threshold: 90
+          memory_threshold: 90
+      - mad:
+          enabled: true
+          z_score: 3.5
+          min_samples: 10
+          min_cpu_usage: 60
+          min_memory_usage: 60

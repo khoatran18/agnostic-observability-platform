@@ -220,3 +220,4 @@ __marimo__/
 node_modules/
 outputs/
 init_db.sql
+local/

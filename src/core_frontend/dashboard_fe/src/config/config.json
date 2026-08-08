@@ -1,0 +1,20 @@
+{
+  "_comment": "Sửa file này để thay đổi cấu hình kết nối và danh sách node mặc định",
+
+  "backend": {
+    "host": "localhost",
+    "port": 8000
+  },
+
+  "default_targets": [
+    "client_node_1:8000",
+    "client_node_2:8000",
+    "client_node_3:8000"
+  ],
+
+  "polling": {
+    "nodes_interval_ms": 5000,
+    "alert_interval_ms": 5000,
+    "default_chart_minutes": 30
+  }
+}

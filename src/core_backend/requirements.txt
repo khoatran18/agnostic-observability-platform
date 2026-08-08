@@ -1,0 +1,10 @@
+fastapi[all]
+psycopg2-binary
+sqlalchemy
+prometheus-client
+requests
+numpy
+pydantic
+pydantic-settings
+python-dotenv
+pyyaml

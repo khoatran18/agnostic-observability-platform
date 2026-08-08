@@ -1,25 +1,11 @@
-# from fastapi import FastAPI
-# from src.core_backend.api.config_management_router import router as config_router
-#
-# app = FastAPI(
-#     title="Core Backend Monitor System",
-#     version="1.0.0"
-# )
-#
-# # Include the configuration management router
-# app.include_router(config_router)
-#
-# @app.get("/")
-# def root():
-#     return {"message": "Core Backend API is running successfully!"}
-
-
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 
 from src.config.settings import load_config
 from src.core_backend.api.config_management_router import router as config_router
+from src.core_backend.api.monitoring_router import router as monitoring_router
 from src.core_backend.config_management.service import ConfigManagementService
 from src.core_backend.anomaly_detection.worker import AnomalyWorker
 from src.shared.postgres.postgres_client import PostgresClient
@@ -30,7 +16,7 @@ db_client = PostgresClient(app_config)
 config_service = ConfigManagementService(db_client)
 
 # Khởi tạo Anomaly Worker
-anomaly_worker = AnomalyWorker(config_service=config_service, interval_seconds=10)
+anomaly_worker = AnomalyWorker(config_service=config_service, app_config=app_config, interval_seconds=10)
 
 
 @asynccontextmanager
@@ -45,7 +31,7 @@ async def lifespan(app: FastAPI):
     # --- KHI SHUTDOWN SERVER ---
     worker_task.cancel()
     db_client.disconnect()
-    print("🛑 [System] System shutdown gracefully.")
+    print("[System] System shutdown gracefully.")
 
 
 app = FastAPI(
@@ -54,8 +40,18 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 # Include các router hệ thống
 app.include_router(config_router)
+app.include_router(monitoring_router)
 
 
 # (Bạn có thể include thêm router khác nếu có, ví dụ router dashboard/status)

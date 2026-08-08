@@ -17,8 +17,8 @@ _state = {
         "total_ram_gb": 10.0,
 
         "mad_k": 3.0,
-        "threshold_1": 0.7,
-        "threshold_2": 0.9,
+        "threshold_1": 0.55,
+        "threshold_2": 0.75,
         "duration_safe_seconds": 10.0,
         "duration_danger_seconds": 30.0,
     }
@@ -92,11 +92,7 @@ def _calculate_cpu_metric(cfg: dict) -> float:
         cpu_val = random.uniform(c_min, c_max)
 
     elif cpu_scen == CPUScenario.SPIKE_MAD_SAFE:
-        if cpu_elapsed < safe_sec:
-            cpu_val = random.uniform(mad_th + 0.01, th1 - 0.01)
-        else:
-            _state["cpu_scenario"] = CPUScenario.NORMAL
-            cpu_val = random.uniform(c_min, c_max)
+        cpu_val = random.uniform(mad_th + 0.01, th1 - 0.01)
 
     elif cpu_scen == CPUScenario.SPIKE_TH1_SAFE:
         if cpu_elapsed < safe_sec:
@@ -145,11 +141,7 @@ def _calculate_ram_metric(cfg: dict) -> float:
         ram_val = random.uniform(r_min, r_max)
 
     elif ram_scen == RAMScenario.SPIKE_MAD_SAFE:
-        if ram_elapsed < safe_sec:
-            ram_val = random.uniform(r_max + 0.2, ram_th1 - 0.1)
-        else:
-            _state["ram_scenario"] = RAMScenario.NORMAL
-            ram_val = random.uniform(r_min, r_max)
+        ram_val = random.uniform(r_max + 0.2, ram_th1 - 0.1)
 
     elif ram_scen == RAMScenario.SPIKE_TH1_SAFE:
         if ram_elapsed < safe_sec:
