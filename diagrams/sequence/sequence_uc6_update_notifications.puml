@@ -1,0 +1,24 @@
+@startuml sequence_uc6_update_notifications
+title Sequence Diagram — UC6: Cập nhật thông tin, bật/tắt kênh thông báo
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor "User" as User
+participant "Dashboard\n(React FE)" as FE
+participant "REST API\n(FastAPI)" as API
+database "PostgreSQL" as DB
+
+User -> FE : Cấu hình token/email/URL & Bật/tắt kênh (Telegram/Gmail/Webhook)
+FE -> API : PUT /api/config/notifications/{channel_name} (Payload: is_enabled, params)
+API -> DB : UPDATE alert_notifications SET is_enabled=..., params=... WHERE channel_name=...
+DB --> API : Cập nhật thành công
+API --> FE : 200 OK
+FE --> User : Thông báo cập nhật kênh thông báo thành công
+
+note right of API
+  Dispatcher sẽ đọc thông tin kênh mới từ DB
+  ngay trong lần phát hiện bất thường tiếp theo.
+end note
+
+@enduml

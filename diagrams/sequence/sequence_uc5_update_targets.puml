@@ -1,0 +1,22 @@
+@startuml sequence_uc5_update_targets
+title Sequence Diagram — UC5: Cập nhật danh sách node giám sát
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor "User" as User
+participant "Dashboard\n(React FE)" as FE
+participant "REST API\n(FastAPI)" as API
+participant "Config Management" as CM
+participant "Prometheus" as Prom
+
+User -> FE : Thêm/Xoá IP/Domain node giám sát & bấm Cập nhật
+FE -> API : PUT /api/config/targets (Payload: targets = [...])
+API -> CM : TargetsManager.update_targets(new_targets)
+CM -> CM : Ghi đè file targets.json (Volume chung)
+CM --> Prom : Prometheus tự động hot-reload targets (file_sd_configs)
+CM --> API : Kết quả cập nhật (targets hiện tại)
+API --> FE : 200 OK
+FE --> User : Thông báo cập nhật danh sách node thành công
+
+@enduml

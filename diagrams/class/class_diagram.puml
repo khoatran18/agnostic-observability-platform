@@ -1,0 +1,114 @@
+@startuml class_diagram
+title Agnostic Observability Platform — Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+
+' ==================== SHARED ====================
+package "shared" {
+    class PostgresClient {
+        - connection_string : str
+        + execute_query(sql, params) : list
+        + execute_non_query(sql, params) : bool
+    }
+
+    class PrometheusClient {
+        - prometheus_url : str
+        + query_instant(promql) : list
+        + query_range(promql, start, end, step) : list
+    }
+}
+
+' ==================== CONFIG MANAGEMENT ====================
+package "core_backend.config_management" {
+    class ConfigManagementService {
+        + get_all_anomaly_strategies() : list
+        + update_strategy_params(id, params) : bool
+        + get_enabled_notifications() : list
+        + update_notification_status(id, enabled) : bool
+        + sync_prometheus_targets(targets) : dict
+    }
+
+    class TargetsManager {
+        + {static} update_targets(new_endpoints) : dict
+    }
+}
+
+' ==================== ANOMALY DETECTION ====================
+package "core_backend.anomaly_detection" {
+    class AnomalyWorker {
+        - interval_seconds : int
+        + run_once() : void
+    }
+
+    class AnomalyEngine {
+        + evaluate_cpu(node_id, value, time, params) : tuple
+        + evaluate_ram(node_id, value, time, params) : tuple
+    }
+
+    class ThresholdStrategy {
+        + {static} evaluate(...) : tuple
+    }
+
+    class MadStrategy {
+        + {static} evaluate(...) : bool
+    }
+}
+
+' ==================== ALERT NOTIFICATION ====================
+package "core_backend.alert_notification" {
+    abstract class BaseNotificationChannel {
+        + {abstract} send(params, node_id, resource, value, scenario, level) : bool
+    }
+
+    class TelegramChannel {
+        + send(...) : bool
+    }
+
+    class WebhookChannel {
+        + send(...) : bool
+    }
+
+    class GmailChannel {
+        + send(...) : bool
+    }
+
+    class NotificationFactory {
+        + {static} create_channel(channel_name) : BaseNotificationChannel
+    }
+
+    class AlertDispatcher {
+        + dispatch(node_id, resource, value, scenario, level) : void
+    }
+
+    class AlertHistoryService {
+        + record_alert_event(...) : void
+        + upsert_node_status(...) : void
+    }
+}
+
+' ==================== RELATIONSHIPS ====================
+TelegramChannel --|> BaseNotificationChannel
+WebhookChannel  --|> BaseNotificationChannel
+GmailChannel    --|> BaseNotificationChannel
+
+AnomalyWorker *-- AnomalyEngine
+AnomalyWorker *-- AlertDispatcher
+AnomalyWorker *-- PrometheusClient
+AnomalyWorker --> ConfigManagementService
+
+AnomalyEngine --> ThresholdStrategy
+AnomalyEngine --> MadStrategy
+AnomalyEngine --> PrometheusClient
+
+AlertDispatcher *-- AlertHistoryService
+AlertDispatcher --> ConfigManagementService
+AlertDispatcher --> NotificationFactory
+
+NotificationFactory ..> BaseNotificationChannel
+
+AlertHistoryService --> PostgresClient
+ConfigManagementService --> PostgresClient
+ConfigManagementService --> TargetsManager
+
+@enduml

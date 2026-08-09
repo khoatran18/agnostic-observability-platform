@@ -1,0 +1,44 @@
+@startuml sequence_backend_anomaly_loop
+title Sequence Diagram — Vòng lặp phát hiện bất thường & Cảnh báo (Backend Anomaly Detection Loop)
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+participant "AnomalyWorker\n(Background Loop)" as Worker
+participant "Prometheus" as Prom
+participant "AnomalyEngine\n(Strategies)" as Engine
+participant "AlertDispatcher\n& Channels" as Dispatcher
+database "PostgreSQL" as DB
+
+loop Định kỳ mỗi 10 giây (vòng lặp run_once)
+
+    Worker -> DB : Refresh strategy config từ DB (mỗi 60s)
+    DB --> Worker : Parameters (Th1, Th2, MAD-k, is_enabled)
+
+    Worker -> Prom : query_instant(client_cpu_usage_ratio / client_ram_usage_ratio)
+    Prom --> Worker : Trả về metric mới nhất của các node
+
+    loop Với mỗi node & loại tài nguyên (CPU/RAM)
+        Worker -> Engine : evaluate(node_id, metric_value)
+        
+        alt Giá trị < Th1 (Bình thường / Hồi phục)
+            Engine --> Worker : Trả về trạng thái NORMAL / RECOVERED
+            Worker -> DB : UPSERT node_current_status = recovered (Màu xanh)
+            
+        else Giá trị >= Th1 (Có nguy cơ bất thường)
+            Engine -> Prom : query_range (Lấy lịch sử 5 phút cho MAD Strategy)
+            Prom --> Engine : Dữ liệu time-series
+            Engine -> Engine : Đánh giá MAD (Modified Z-Score) & Threshold (Kiểm tra duration >= 30s)
+            Engine --> Worker : Trả về mức cảnh báo (WARNING / ALERT)
+            
+            Worker -> Dispatcher : dispatch(node_id, resource, value, alert_level)
+            Dispatcher -> DB : Ghi nhận sự kiện (UPSERT node_current_status & INSERT alert_history)
+            Dispatcher -> DB : Lấy danh sách kênh thông báo đang BẬT (Telegram, Gmail, Webhook)
+            DB --> Dispatcher : Danh sách kênh active
+            Dispatcher -> Dispatcher : Gửi thông báo bất đồng bộ qua các kênh (Async Thread)
+        end
+    end
+
+end
+
+@enduml

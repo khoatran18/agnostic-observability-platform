@@ -1,0 +1,24 @@
+@startuml sequence_uc4_update_strategy
+title Sequence Diagram — UC4: Cập nhật tham số phát hiện bất thường
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor "User" as User
+participant "Dashboard\n(React FE)" as FE
+participant "REST API\n(FastAPI)" as API
+database "PostgreSQL" as DB
+
+User -> FE : Nhập tham số mới (Th1, Th2, MAD-k) & bấm Lưu
+FE -> API : PUT /api/config/strategies/{id} (Payload: is_enabled, params)
+API -> DB : UPDATE anomaly_strategies SET params=..., is_enabled=... WHERE id=...
+DB --> API : Cập nhật thành công
+API --> FE : 200 OK (Cấu hình đã cập nhật)
+FE --> User : Thông báo cập nhật tham số chiến lược thành công
+
+note right of API
+  Worker tự động tải lại tham số mới từ DB
+  ở chu kỳ refresh tiếp theo (tối đa 60s).
+end note
+
+@enduml

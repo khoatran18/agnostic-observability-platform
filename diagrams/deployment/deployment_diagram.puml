@@ -1,0 +1,36 @@
+@startuml deployment_diagram
+title Agnostic Observability Platform — Deployment Diagram
+
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 60
+
+node "Docker Host" as Host {
+
+    node "core-backend" as Backend <<Container>>
+    node "core-frontend" as Frontend <<Container>>
+    node "prometheus" as Prom <<Container>>
+    node "postgres" as PG <<Container>>
+
+    node "client-simulator-1" as Sim1 <<Container>>
+    node "client-simulator-2" as Sim2 <<Container>>
+    node "client-simulator-3" as Sim3 <<Container>>
+
+    Backend --> PG : SQL
+    Backend --> Prom : PromQL query
+
+    Frontend --> Backend : HTTP
+
+    Prom --> Sim1 : scrape /metrics
+    Prom --> Sim2 : scrape /metrics
+    Prom --> Sim3 : scrape /metrics
+}
+
+actor "User" as User
+
+User --> Frontend : HTTP
+
+cloud "External Services" as Notif
+Backend --> Notif : Telegram / Gmail / Webhook
+
+@enduml

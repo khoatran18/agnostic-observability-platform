@@ -1,0 +1,19 @@
+@startuml sequence_uc2_metric_history
+title Sequence Diagram — UC2: Xem lịch sử chỉ số CPU / RAM
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor "User" as User
+participant "Dashboard\n(React FE)" as FE
+participant "REST API\n(FastAPI)" as API
+participant "Prometheus" as Prom
+
+User -> FE : Chọn Node & khoảng thời gian (CPU/RAM)
+FE -> API : GET /api/dashboard/metrics-history?node_id=...&metric_type=...&minutes=...
+API -> Prom : query_range(PromQL, start, end, step)
+Prom --> API : Trả về chuỗi dữ liệu time-series
+API --> FE : 200 OK (JSON Time-Series Metrics)
+FE --> User : Vẽ và hiển thị biểu đồ chỉ số CPU/RAM
+
+@enduml

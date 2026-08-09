@@ -42,8 +42,7 @@ class AnomalyEngine:
         mad_params = mad_config.get("params", {})
 
         th1 = th_params.get("threshold_1", 0.55)
-        mad_boundary = (2.0 / 3.0) * th1
-
+        # mad_boundary = (2.0 / 3.0) * th1
         # 1. Evaluate MAD if enabled
         metric_name = "client_cpu_usage_ratio" if resource_type == "cpu" else "client_ram_usage_ratio"
         is_mad_triggered = False
@@ -64,7 +63,8 @@ class AnomalyEngine:
                         CPUScenario.SPIKE_MAD_SAFE if resource_type == "cpu" else RAMScenario.SPIKE_MAD_SAFE), None, False
                 return (CPUScenario.NORMAL if resource_type == "cpu" else RAMScenario.NORMAL), None, False
 
-            if value < mad_boundary and not is_mad_triggered:
+            # if value < mad_boundary and not is_mad_triggered:
+            if not is_mad_triggered:
                 return (CPUScenario.NORMAL if resource_type == "cpu" else RAMScenario.NORMAL), None, False
             else:
                 return (

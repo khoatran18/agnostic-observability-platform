@@ -1,0 +1,40 @@
+@startuml usecase_diagram
+title Agnostic Observability Platform — Use Case Diagram
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "User" as User
+' actor "Notification Services\n(Telegram / Gmail / Webhook)" as ExternalNotif <<External>>
+
+rectangle "Agnostic Observability Platform" {
+
+    package "Dashboard" {
+        usecase "Xem trạng thái\nthời gian thực các node" as UC1
+        usecase "Xem lịch sử\nchỉ số CPU / RAM" as UC2
+        usecase "Xem lịch sử\ncảnh báo" as UC3
+    }
+
+    package "Quản lý cấu hình" {
+        usecase "Cập nhật tham số\nphát hiện bất thường\n(Th1 / Th2 / MAD-k)" as UC4
+        usecase "Cập nhật danh sách\nnode giám sát" as UC5
+        usecase "Cập nhật thông tin,\nbật tắt kênh thông báo" as UC6
+    }
+
+    ' package "Hệ thống giám sát & cảnh báo" {
+        ' usecase "Gửi cảnh báo tự động" as UC7
+    ' }
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+
+' Hệ thống tự động kích hoạt khi có bất thường (dựa trên cấu hình bật/tắt của user)
+' UC7 --> ExternalNotif
+' UC6 ..> UC7 : <<include>>
+
+@enduml

@@ -1,0 +1,19 @@
+@startuml sequence_uc3_alert_history
+title Sequence Diagram — UC3: Xem lịch sử cảnh báo
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor "User" as User
+participant "Dashboard\n(React FE)" as FE
+participant "REST API\n(FastAPI)" as API
+database "PostgreSQL" as DB
+
+User -> FE : Chuyển sang tab "Alert History"
+FE -> API : GET /api/dashboard/alert-history?limit=...
+API -> DB : SELECT * FROM alert_history ORDER BY timestamp DESC
+DB --> API : Trả về danh sách nhật ký cảnh báo
+API --> FE : 200 OK (JSON Alert Logs)
+FE --> User : Hiển thị bảng lịch sử cảnh báo
+
+@enduml

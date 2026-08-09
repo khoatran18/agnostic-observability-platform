@@ -1,0 +1,19 @@
+@startuml sequence_uc1_realtime_status
+title Sequence Diagram — UC1: Xem trạng thái thời gian thực các node
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor "User" as User
+participant "Dashboard\n(React FE)" as FE
+participant "REST API\n(FastAPI)" as API
+database "PostgreSQL" as DB
+
+User -> FE : Truy cập trang Dashboard
+FE -> API : GET /api/dashboard/nodes-realtime-status
+API -> DB : SELECT * FROM node_current_status
+DB --> API : Trả về danh sách trạng thái các node (cpu, ram, level)
+API --> FE : 200 OK (JSON Data)
+FE --> User : Hiển thị danh sách card trạng thái thời gian thực các node
+
+@enduml
