@@ -4,9 +4,9 @@
             "job": "dynamic-metrics-craw"
         },
         "targets": [
+            "client_node_1:8000",
             "client_node_2:8000",
-            "client_node_3:8000",
-            "client_node_1:8000"
+            "client_node_3:8000"
         ]
     }
 ]

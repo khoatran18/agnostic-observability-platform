@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Dict, Any
 
 from src.config.logging import setup_logging
@@ -19,6 +20,23 @@ class AlertDispatcher:
         self.config_service = config_service
         self.alert_history = AlertHistoryService(config_service.db_client)
 
+    def _send_async_channels(self, active_channels, node_id, resource_type, value, scenario, alert_level):
+        """
+        Background task to iterate and dispatch alerts across channels without blocking the main loop.
+        """
+        try:
+            for channel_record in active_channels:
+                channel_name = channel_record.get("channel_name")
+                params = channel_record.get("params", {})
+
+                channel_instance = NotificationFactory.create_channel(channel_name)
+                if channel_instance:
+                    channel_instance.send(params, node_id, resource_type, value, scenario, alert_level)
+                else:
+                    logger.error(f"[AlertDispatcher] Failed to create channel instance for: {channel_name}")
+        except Exception as e:
+            logger.error(f"[AlertDispatcher] Error in background channel dispatch: {e}")
+
     def dispatch(self, node_id: str, resource_type: str, value: float, scenario: str, alert_level: str = "alert"):
         """
         Query enabled notification channels from DB and trigger delivery.
@@ -36,16 +54,23 @@ class AlertDispatcher:
                 return
 
             # 3. Iterate and dispatch alerts
-            for channel_record in active_channels:
-                channel_name = channel_record.get("channel_name")
-                params = channel_record.get("params", {})
+            dispatch_thread = threading.Thread(
+                target=self._send_async_channels,
+                args=(active_channels, node_id, resource_type, value, scenario, alert_level),
+                daemon=True
+            )
+            dispatch_thread.start()
 
-                channel_instance = NotificationFactory.create_channel(channel_name)
-                if channel_instance:
-                    # Dispatch message without icons and purely in English
-                    channel_instance.send(params, node_id, resource_type, value, scenario, alert_level)
-                else:
-                    logger.error(f"[AlertDispatcher] Failed to create channel instance for: {channel_name}")
+            # for channel_record in active_channels:
+            #     channel_name = channel_record.get("channel_name")
+            #     params = channel_record.get("params", {})
+            #
+            #     channel_instance = NotificationFactory.create_channel(channel_name)
+            #     if channel_instance:
+            #         # Dispatch message without icons and purely in English
+            #         channel_instance.send(params, node_id, resource_type, value, scenario, alert_level)
+            #     else:
+            #         logger.error(f"[AlertDispatcher] Failed to create channel instance for: {channel_name}")
 
         except Exception as e:
             logger.error(f"[AlertDispatcher] Error dispatching alert for node {node_id}: {e}")

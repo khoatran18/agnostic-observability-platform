@@ -135,6 +135,10 @@ class AnomalyWorker:
             loop_start = time.time()
             try:
                 self.run_once()
+
+                elapsed = time.time() - loop_start
+                logger.info(f"[AnomalyWorker] Loop execution completed in {elapsed:.4f} seconds.")
+
             except Exception as e:
                 logger.error(f"[AnomalyWorker] Critical error during evaluation loop: {e}", exc_info=True)
 
