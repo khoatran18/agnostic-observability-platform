@@ -82,6 +82,43 @@ value ≥ Th1?
        └─ Returns: (scenario, notification_type, is_danger)
 ```
 
+#### Detection Loop Flow
+
+```mermaid
+flowchart LR
+    subgraph LOOP["AnomalyWorker.run_once() — every 10s"]
+        direction TB
+        P1["1. Refresh strategy cache\nfrom DB every 60s"]
+        P2["2. Query Prometheus\ncpu_usage_ratio per node\nram_usage_ratio per node"]
+        P3["3. For each node\nAnomalyEngine.evaluate()"]
+        P4a["MAD Strategy\nmodified Z-score\nagainst 5-min history"]
+        P4b["Threshold Strategy\nTh1 / Th2 breach\n+ duration timer"]
+        P5{"Notification type?"}
+        P6a["normal / recovered\nupsert status GREEN"]
+        P6b["warning\ndispatch WARNING"]
+        P6c["alert\ndispatch ALERT"]
+        P7["AlertDispatcher:\n1. record_alert_event to DB\n2. get enabled channels from DB\n3. async send per channel"]
+
+        P1 --> P2 --> P3
+        P3 --> P4a & P4b --> P5
+        P5 --> P6a & P6b & P6c
+        P6b & P6c --> P7
+    end
+```
+
+#### Detection Outcome Table
+
+| Value Range | Sustained Duration | MAD Triggered | Outcome |
+| :--- | :--- | :--- | :--- |
+| `value < Th1` | — | — | **Normal / Recovered** (green) |
+| `Th1 ≤ value < Th2` | first breach | — | **Warning** (yellow) |
+| `Th1 ≤ value < Th2` | ≥ 30 s | ✅ Yes | **Alert** — Th1 Danger (red) |
+| `Th1 ≤ value < Th2` | ≥ 30 s | ❌ No | **Warning** (sustained, yellow) |
+| `value ≥ Th2` | first breach | — | **Warning** (yellow) |
+| `value ≥ Th2` | ≥ 30 s | — | **Alert** — Th2 Danger (red) |
+
+> Default: `Th1 = 0.55`, `Th2 = 0.75`. Tunable at runtime via `/api/config/strategies`.
+
 ### Threshold Strategy (`anomaly_detection/strategies/threshold_strategy.py`)
 
 Uses two configurable thresholds and a **duration-based escalation** model:

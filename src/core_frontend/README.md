@@ -41,6 +41,15 @@ The dashboard communicates with the Core Backend REST API and provides:
 - **Alert History Log** — Table of recent dispatched notifications from the `alert_history` table.
 - **Configuration Panel** — Forms to update anomaly strategy parameters, enable/disable notification channels, and manage Prometheus scrape targets.
 
+**Dashboard — Cluster Overview & Metric Charts**
+![Dashboard](../../../assets/fe_dashboard.png)
+
+**Configuration — Strategy, Notification & Target Management**
+![Configuration](../../../assets/fe_configuration.png)
+
+**Alert History — Dispatched Notification Log**
+![Alert History](../../../assets/fe_alert_history.png)
+
 ---
 
 ## 🔀 Nginx Configuration

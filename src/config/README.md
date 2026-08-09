@@ -85,10 +85,9 @@ core-backend:
 ```bash
 # Copy the template and edit credentials (Telegram token, Gmail, etc.)
 cp init_db.example.sql init_db.sql
-
-# Apply schema after the postgres container is running
-docker exec -i postgres psql -U admin -d main_db < src/shared/postgres/init_db.sql
 ```
+
+The backend applies the schema automatically on startup.
 
 ### Prometheus (`shared/prometheus/`)
 

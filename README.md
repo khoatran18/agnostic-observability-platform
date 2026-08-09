@@ -108,12 +108,7 @@ POSTGRES_PASSWORD=your_password
 cp src/shared/postgres/init_db.example.sql src/shared/postgres/init_db.sql
 ```
 
-Edit `init_db.sql` to set your desired notification channel credentials (Telegram bot token, Gmail credentials, etc.), then apply the schema:
-
-```bash
-# After the stack is up (step 3), run:
-docker exec -i postgres psql -U admin -d main_db < src/shared/postgres/init_db.sql
-```
+Edit `init_db.sql` to set your notification channel credentials (Telegram bot token, Gmail credentials, etc.). The backend will apply the schema automatically on startup.
 
 > The `init_db.sql` creates tables: `anomaly_strategies`, `alert_notifications`, `node_current_status`, `alert_history` — and seeds default strategy configs and notification channels.
 
@@ -138,19 +133,9 @@ This launches 3 simulated client nodes (ports 8010–8012) and the Client Contro
 
 > The simulator stack joins the `agnostic-observability-platform_monitor-net` Docker network, which must already exist from step 3.
 
-### 5. Register monitored targets
-
-Use the dashboard Config panel, or call the API directly:
-
-```bash
-curl -X PUT http://localhost:8000/api/config/targets \
-  -H "Content-Type: application/json" \
-  -d '{"targets": ["client_node_1:8000", "client_node_2:8000", "client_node_3:8000"]}'
-```
-
-Prometheus will begin scraping the registered nodes within one scrape interval (5 seconds).
 
 ---
+
 
 ## 📂 Folder Structure
 
@@ -240,42 +225,8 @@ flowchart TD
     end
 ```
 
-### Backend Detection Loop (detailed)
 
-```mermaid
-flowchart LR
-    subgraph LOOP["AnomalyWorker.run_once() — every 10s"]
-        direction TB
-        P1["1. Refresh strategy cache\nfrom DB every 60s"]
-        P2["2. Query Prometheus\ncpu_usage_ratio per node\nram_usage_ratio per node"]
-        P3["3. For each node\nAnomalyEngine.evaluate()"]
-        P4a["MAD Strategy\nmodified Z-score\nagainst 5-min history"]
-        P4b["Threshold Strategy\nTh1 / Th2 breach\n+ duration timer"]
-        P5{"Notification type?"}
-        P6a["normal / recovered\nupsert status GREEN"]
-        P6b["warning\ndispatch WARNING"]
-        P6c["alert\ndispatch ALERT"]
-        P7["AlertDispatcher:\n1. record_alert_event to DB\n2. get enabled channels from DB\n3. async send per channel"]
 
-        P1 --> P2 --> P3
-        P3 --> P4a & P4b --> P5
-        P5 --> P6a & P6b & P6c
-        P6b & P6c --> P7
-    end
-```
-
-#### Detection Outcome Table
-
-| Value Range | Sustained Duration | MAD Triggered | Outcome |
-| :--- | :--- | :--- | :--- |
-| `value < Th1` | — | — | **Normal / Recovered** (green) |
-| `Th1 ≤ value < Th2` | first breach | — | **Warning** (yellow) |
-| `Th1 ≤ value < Th2` | ≥ 30 s | ✅ Yes | **Alert** — Th1 Danger (red) |
-| `Th1 ≤ value < Th2` | ≥ 30 s | ❌ No | **Warning** (sustained, yellow) |
-| `value ≥ Th2` | first breach | — | **Warning** (yellow) |
-| `value ≥ Th2` | ≥ 30 s | — | **Alert** — Th2 Danger (red) |
-
-> Default: `Th1 = 0.55`, `Th2 = 0.75`. Tunable at runtime via `/api/config/strategies`.
 
 ---
 
@@ -323,6 +274,15 @@ flowchart LR
 * Renders **time-series charts** for CPU and RAM by fetching historical data from Prometheus through the backend proxy (`/api/dashboard/metrics-history`).
 * Includes a **Configuration Panel** to update anomaly strategy parameters, enable/disable notification channels, and manage Prometheus scrape targets — all without touching the database directly.
 
+**Dashboard — Cluster Overview & Metric Charts**
+![Dashboard](./assets/fe_dashboard.png)
+
+**Configuration — Strategy, Notification & Target Management**
+![Configuration](./assets/fe_configuration.png)
+
+**Alert History — Dispatched Notification Log**
+![Alert History](./assets/fe_alert_history.png)
+
 *See details:* [Core Frontend](./src/core_frontend/README.md)
 
 ### 🧪 Simulator
@@ -330,6 +290,8 @@ flowchart LR
 * **`client-node/`** — A FastAPI service that exposes Prometheus-compatible `/metrics` (CPU ratio, RAM bytes, RAM ratio) and accepts `POST /api/scenario/cpu|ram` to switch between 6 controlled simulation scenarios (Normal → Th2 Danger).
 * Three simulator nodes run simultaneously (ports 8010–8012) on the same Docker network as the main stack, allowing Prometheus to scrape them immediately after target registration.
 * **`client-control-plane/`** — A React UI to inject scenarios into any node via point-and-click, useful for demos and end-to-end validation.
+
+![Simulation Control Plane — inject CPU/RAM scenarios into each node](./assets/simulation_control_plane.png)
 
 *See details:* [Simulator](./src/simulator/README.md)
 
